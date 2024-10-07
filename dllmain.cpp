@@ -243,5 +243,9 @@ STDAPI DllUnregisterServer()
 			hr = S_OK;
 		}
 	}
+	if (SUCCEEDED(hr))
+	{
+		SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+	}
 	return hr;
 }
