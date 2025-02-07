@@ -14,7 +14,7 @@
 extern HRESULT CSpriteThumbProvider_CreateInstance(REFIID riid, void** ppv);
 
 #define SZ_CLSID_GOLDSRCSPRITETHUMBNAILPROVIDER     L"{68be013c-b874-4217-b193-e6ed9de0ea34}"
-#define SZ_GOLDSRCSPRITETHUMBNAILPROVIDER           L"GoldSrc Sprite Thumbnail Provider"
+#define SZ_GOLDSRCSPRITETHUMBNAILPROVIDER           L"GoldSrc Sprite Thumbnail Provider spr-v3-support"
 
 const CLSID CLSID_GoldSrcSpriteThumbnailProvider = { 0x68be013c, 0xb874, 0x4217, { 0xb1, 0x93, 0xe6, 0xed, 0x9d, 0xe0, 0xea, 0x34 } };
 
