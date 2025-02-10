@@ -158,11 +158,16 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="SpriteFile.cpp" />
     <ClCompile Include="GoldSrcSpriteThumbnailProvider.cpp" />
+    <ClCompile Include="SpriteFileV3.cpp" />
+    <ClCompile Include="SpriteLoader.cpp" />
     <ClCompile Include="stb_image_resize2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dxt.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpriteFile.h" />
+    <ClInclude Include="SpriteFileV3.h" />
+    <ClInclude Include="SpriteLoader.h" />
     <ClInclude Include="stb_image_resize2.h" />
   </ItemGroup>
   <ItemGroup>

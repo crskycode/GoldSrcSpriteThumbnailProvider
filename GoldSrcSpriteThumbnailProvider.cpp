@@ -11,7 +11,7 @@
 #include <wincodec.h>   // Windows Imaging Codecs
 #include <msxml6.h>
 #include <new>
-#include "SpriteFile.h"
+#include "SpriteLoader.h"
 #include "stb_image_resize2.h"
 
 #pragma comment(lib, "shlwapi.lib")
@@ -103,78 +103,8 @@ IFACEMETHODIMP CSpriteThumbProvider::Initialize(IStream* pStream, DWORD)
 	return hr;
 }
 
-static PSPRITE_FRAME_SINGLE SelectFirstFrame(PSPRITE_FILE pSprite)
+static HRESULT ScaleImage(int nNewWidth, int nNewHeight, int nWidth, int nHeight, const BYTE* pPixels, BYTE** ppResult)
 {
-	for (INT32 i = 0; i < pSprite->Header.FrameCount; i++)
-	{
-		PSPRITE_FRAME pFrame = pSprite->Frames[i];
-
-		if (pFrame->Type == SPR_SINGLE)
-		{
-			return pFrame->u.Single;
-		}
-
-		if (pFrame->Type == SPR_GROUP)
-		{
-			PSPRITE_FRAME_GROUP pGroup = pFrame->u.Group;
-
-			if (pGroup->Frames)
-			{
-				for (INT32 j = 0; j < pGroup->FrameCount; j++)
-				{
-					return pGroup->Frames[j];
-				}
-			}
-		}
-	}
-
-	return NULL;
-}
-
-static HRESULT ConvertFrameToRGB(PSPRITE_FILE pSprite, PSPRITE_FRAME_SINGLE frame, PBYTE* ppResult)
-{
-	int nWidth = frame->Header.Width;
-	int nHeight = frame->Header.Height;
-
-	size_t nSize = (size_t)nWidth * (size_t)nHeight * 3;
-
-	BYTE* pBuffer = (BYTE*)malloc(nSize);
-
-	if (pBuffer == NULL)
-	{
-		return E_OUTOFMEMORY;
-	}
-
-	COLOR24* pColors = pSprite->Palette.Colors;
-
-	BYTE* pSrc = frame->Pixels;
-	BYTE* pDst = pBuffer;
-
-	int nCount = nWidth * nHeight;
-
-	for (int i = 0; i < nCount; i++)
-	{
-		BYTE index = *pSrc;
-		COLOR24* color = &pColors[index];
-
-		*(pDst + 0) = color->R;
-		*(pDst + 1) = color->G;
-		*(pDst + 2) = color->B;
-
-		pSrc += 1;
-		pDst += 3;
-	}
-
-	*ppResult = pBuffer;
-
-	return S_OK;
-}
-
-static HRESULT ScaleImage(int nNewWidth, int nNewHeight, PSPRITE_FRAME_SINGLE pFrame, const BYTE* pPixels, BYTE** ppResult)
-{
-	int nWidth = pFrame->Header.Width;
-	int nHeight = pFrame->Header.Height;
-
 	size_t nSize = (size_t)nNewWidth * (size_t)nNewHeight * 3;
 
 	BYTE* pBuffer = (BYTE*)malloc(nSize);
@@ -257,28 +187,12 @@ IFACEMETHODIMP CSpriteThumbProvider::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_A
 
 	// Load SPR file
 
-	PSPRITE_FILE pSprite;
+	INT32 nImageWidth;
+	INT32 nImageHeight;
+	PVOID pOriginalImagePixels;
 
-	hr = LoadSpriteFile(_pStream, &pSprite);
+	hr = LoadSpriteToRGB(_pStream, &nImageWidth, &nImageHeight, &pOriginalImagePixels);
 	if (FAILED(hr)) {
-		return hr;
-	}
-
-	// Get first frame
-
-	PSPRITE_FRAME_SINGLE pFrame = SelectFirstFrame(pSprite);
-	if (pFrame == NULL) {
-		FreeSpriteFile(pSprite);
-		return E_UNEXPECTED;
-	}
-
-	// Convert to RGB
-
-	BYTE* pOriginalImagePixels;
-
-	hr = ConvertFrameToRGB(pSprite, pFrame, &pOriginalImagePixels);
-	if (FAILED(hr)) {
-		FreeSpriteFile(pSprite);
 		return hr;
 	}
 
@@ -287,13 +201,11 @@ IFACEMETHODIMP CSpriteThumbProvider::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_A
 	BYTE* pScaledImagePixels;
 
 	int nNewWidth = cx;
-	int nNewHeight = (int)((float)cx / ((float)pFrame->Header.Width / (float)pFrame->Header.Height));
+	int nNewHeight = (int)((float)cx / ((float)nImageWidth / (float)nImageHeight));
 
-	hr = ScaleImage(nNewWidth, nNewHeight, pFrame, pOriginalImagePixels, &pScaledImagePixels);
+	hr = ScaleImage(nNewWidth, nNewHeight, nImageWidth, nImageHeight, (PBYTE)pOriginalImagePixels, &pScaledImagePixels);
 
 	free(pOriginalImagePixels);
-
-	FreeSpriteFile(pSprite);
 
 	if (FAILED(hr)) {
 		return hr;

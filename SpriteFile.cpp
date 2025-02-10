@@ -324,10 +324,6 @@ VOID FreeSpriteFile(PSPRITE_FILE sprite) {
 		free(sprite->Frames);
 	}
 	free(sprite);
-
-#ifdef _DEBUG
-	_CrtDumpMemoryLeaks();
-#endif
 }
 
 
