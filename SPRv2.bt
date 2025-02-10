@@ -1,0 +1,94 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: SPRv2.bt
+//   Authors: Crsky
+//   Version: 1.0.0
+//   Purpose: Half-Life Sprite File Version 2
+//  Category: 
+// File Mask: 
+//  ID Bytes: 49 44 53 50 02 00 00 00
+//   History: 
+//------------------------------------------------
+
+enum SYNC_TYPE {
+    ST_SYNC = 0,
+    ST_RAND
+};
+
+enum {
+    SPR_SINGLE = 0,
+    SPR_GROUP
+};
+
+struct SPRITE_FILE_HEADER {
+    char		ID[4];
+	int			Version;
+	int			Type;
+	int			TexFormat;
+	float		BoundingRadius;
+	int			Width;
+	int			Height;
+	int			NumFrames;
+	float		BeamLength;
+    SYNC_TYPE	SyncType;
+};
+
+struct SPRITE_FRAME_HEADER {
+    int Origin[2];
+	int Width;
+	int Height;
+};
+
+struct COLOR24 {
+    byte R;
+    byte G;
+    byte B;
+};
+
+struct PALETTE {
+    short    NumColors;
+    COLOR24  Colors[NumColors] <optimize=false>;
+};
+
+struct SINGLE_FRAME {
+    int                  Type;
+    SPRITE_FRAME_HEADER  Header;
+    byte                 Pixels[Header.Width * Header.Height] <optimize=false>;
+};
+
+struct FRAME_GROUP_ITEM {
+    SPRITE_FRAME_HEADER Header;
+    byte                Pixels[Header.Width * Header.Height] <optimize=false>;
+};
+
+struct FRAME_GROUP {
+    int              Type;
+    int              NumFrames;
+    float            Intervals[NumFrames];
+    FRAME_GROUP_ITEM Frames[NumFrames] <optimize=false>;
+};
+
+struct SPRITE {
+    SPRITE_FILE_HEADER Header;
+
+    Assert(Header.Version == 2, "Unknow version");
+
+    PALETTE Palette;
+
+    local int i;
+    local int frameType;
+
+    for (i = 0; i < Header.NumFrames; i++) {
+        frameType = ReadInt();
+        if (frameType == SPR_SINGLE) {
+            SINGLE_FRAME SingleFrame;
+        } else if (frameType == SPR_GROUP) {
+            FRAME_GROUP FrameGroup;
+        } else {
+            Assert(0, "Unknow frame type");
+        }
+    }
+};
+
+SPRITE Sprite;

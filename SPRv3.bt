@@ -1,0 +1,91 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: SPRv3.bt
+//   Authors: Crsky
+//   Version: 1.0.0
+//   Purpose: CSO Sprite File Version 3
+//  Category: 
+// File Mask: 
+//  ID Bytes: 49 44 53 50 03 00 00 00
+//   History: 
+//------------------------------------------------
+
+struct DDS_PIXELFORMAT
+{
+    int dwSize;
+    int dwFlags;
+    int dwFourCC;
+    int dwRGBBitCount;
+    int dwRBitMask;
+    int dwGBitMask;
+    int dwBBitMask;
+    int dwABitMask;
+};
+
+struct DDS_HEADER
+{
+    int dwSize;
+    int dwFlags;
+    int dwHeight;
+    int dwWidth;
+    int dwPitchOrLinearSize;
+    int dwDepth;
+    int dwMipMapCount;
+    int dwReserved1[11];
+    DDS_PIXELFORMAT ddspf;
+    int dwCaps;
+    int dwCaps2;
+    int dwCaps3;
+    int dwCaps4;
+    int dwReserved2;
+};
+
+struct DDS_FILE
+{
+    byte Magic[4];
+    DDS_HEADER Header;
+
+    Assert(Header.dwMipMapCount == 1, "Mip map is not supported");
+
+    // Calculate size of texture data
+    local int Size = GetTextureSize(Header.ddspf.dwFourCC, Header.dwWidth, Header.dwHeight);
+
+    byte Data[Size] <optimize=false>;
+};
+
+int GetTextureSize(int format, int width, int height)
+{
+    switch (format)
+    {
+        case 0x35545844: // DXT5
+            return Max(1,((height+3)/4))*Max(1,((width+3)/4))*16;
+        default:
+            Assert(0, "Unknow format");
+    }
+}
+
+struct SPRITE_HEADER
+{
+    byte   ID[4];
+    int    Version;
+    int    Type;
+    int    TexFormat;
+    float  BoundingRadius;
+    int    Width;
+    int    Height;
+    int    NumFrames;
+    float  BeamLength;
+    int    SyncType;
+};
+
+struct SPRITE_FILE
+{
+    SPRITE_HEADER Header;
+
+    Assert(Header.Version == 3, "Unknow version");
+
+    DDS_FILE Frames[Header.NumFrames] <optimize=false>;
+};
+
+SPRITE_FILE Sprite;
